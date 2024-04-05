@@ -288,7 +288,6 @@ def classical_degradation(x, k, sf=3):
         x: HxWxC image, [0, 1]/[0, 255]
         k: hxw, double
         sf: down-scale factor
-
     Return:
         downsampled LR image
     '''
@@ -814,7 +813,7 @@ def single_degrade(input_path, output_path):
 
     img = util.uint2single(img)
     k = anisotropic_Gaussian(ksize=15, theta=np.pi, l1=6, l2=6)
-    util.imshow(k*10)
+    # util.imshow(k*10)
 
     # output_dir_b = output_path + "/bicubic_x4/"
     output_dir_s = output_path + "/srmd_x4/"
@@ -857,7 +856,8 @@ def single_degrade(input_path, output_path):
         img_c = utils.utils_image.single2uint(img_c)
         utils.utils_image.imwrite(img_c, output_dir_c + file_name + ".png")
 
-        util.imshow(img_d)
+        print("Saved:", output_dir_c, output_dir_d, output_dir_s)
+        # util.imshow(img_d)
 
 if __name__ == '__main__':
     batch_degrade()
