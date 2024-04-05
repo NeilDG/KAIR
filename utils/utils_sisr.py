@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+import os
+
+import utils.utils_image
 from utils import utils_image as util
 import random
 
@@ -10,7 +13,8 @@ from scipy.interpolate import interp2d
 
 import numpy as np
 import torch
-
+import glob
+import cv2
 
 """
 # --------------------------------------------
@@ -796,41 +800,102 @@ def Gt_np(x, k, sf=3, center=False):
     return x
 
 
-if __name__ == '__main__':
-    img = util.imread_uint('test.bmp', 3)
+def batch_degrade():
+    input_list = glob.glob("X:/SuperRes Dataset/Flickr2K/Flickr2K_HR/*.png")
+    output_dir = "X:/SuperRes Dataset/Flickr2K/"
+    print(len(input_list))
+
+    for input_path in input_list:
+        single_degrade(input_path, output_dir)
+
+def single_degrade(input_path, output_path):
+    img = util.imread_uint(input_path, 3)
+    file_name = input_path.split("\\")[-1].split(".")[0]
 
     img = util.uint2single(img)
     k = anisotropic_Gaussian(ksize=15, theta=np.pi, l1=6, l2=6)
     util.imshow(k*10)
 
+    # output_dir_b = output_path + "/bicubic_x4/"
+    output_dir_s = output_path + "/srmd_x4/"
+    output_dir_d = output_path + "/dpsr_x4/"
+    output_dir_c = output_path + "/classic_x4/"
 
-    for sf in [2, 3, 4]:
+    # if not os.path.exists(output_dir_b):
+    #     os.makedirs(output_dir_b, exist_ok=True)
 
+    if not os.path.exists(output_dir_s):
+        os.makedirs(output_dir_s, exist_ok=True)
+
+    if not os.path.exists(output_dir_d):
+        os.makedirs(output_dir_d, exist_ok=True)
+
+    if not os.path.exists(output_dir_c):
+        os.makedirs(output_dir_c, exist_ok=True)
+
+    for sf in [4]:
         # modcrop
         img = modcrop_np(img, sf=sf)
 
         # 1) bicubic degradation
-        img_b = bicubic_degradation(img, sf=sf)
-        print(img_b.shape)
+        # img_b = bicubic_degradation(img, sf=sf)
+        # img_b = utils.utils_image.single2uint(img_b)
+        # utils.utils_image.imwrite(img_b, output_dir_b + file_name + ".png")
 
         # 2) srmd degradation
         img_s = srmd_degradation(img, k, sf=sf)
-        print(img_s.shape)
+        img_s = utils.utils_image.single2uint(img_s)
+        utils.utils_image.imwrite(img_s, output_dir_s + file_name + ".png")
 
         # 3) dpsr degradation
         img_d = dpsr_degradation(img, k, sf=sf)
-        print(img_d.shape)
+        img_d = utils.utils_image.single2uint(img_d)
+        utils.utils_image.imwrite(img_d, output_dir_d + file_name + ".png")
 
         # 4) classical degradation
-        img_d = classical_degradation(img, k, sf=sf)
-        print(img_d.shape)
+        img_c = classical_degradation(img, k, sf=sf)
+        img_c = utils.utils_image.single2uint(img_c)
+        utils.utils_image.imwrite(img_c, output_dir_c + file_name + ".png")
 
-    k = anisotropic_Gaussian(ksize=7, theta=0.25*np.pi, l1=0.01, l2=0.01)
-    #print(k)
-#    util.imshow(k*10)
+        util.imshow(img_d)
 
-    k = shifted_anisotropic_Gaussian(k_size=np.array([15, 15]), scale_factor=np.array([4, 4]), min_var=0.8, max_var=10.8, noise_level=0.0)
-#    util.imshow(k*10)
+if __name__ == '__main__':
+    batch_degrade()
+#     img = util.imread_uint('test.bmp', 3)
+#
+#     img = util.uint2single(img)
+#     k = anisotropic_Gaussian(ksize=15, theta=np.pi, l1=6, l2=6)
+#     util.imshow(k*10)
+#
+#
+#     for sf in [2, 3, 4]:
+#
+#         # modcrop
+#         img = modcrop_np(img, sf=sf)
+#
+#         # 1) bicubic degradation
+#         img_b = bicubic_degradation(img, sf=sf)
+#         print(img_b.shape)
+#
+#         # 2) srmd degradation
+#         img_s = srmd_degradation(img, k, sf=sf)
+#         print(img_s.shape)
+#
+#         # 3) dpsr degradation
+#         img_d = dpsr_degradation(img, k, sf=sf)
+#         print(img_d.shape)
+#
+#         # 4) classical degradation
+#         img_d = classical_degradation(img, k, sf=sf)
+#         print(img_d.shape)
+#
+#     util.imshow(img_d)
+#     k = anisotropic_Gaussian(ksize=7, theta=0.25*np.pi, l1=0.01, l2=0.01)
+#     #print(k)
+# #    util.imshow(k*10)
+#
+#     k = shifted_anisotropic_Gaussian(k_size=np.array([15, 15]), scale_factor=np.array([4, 4]), min_var=0.8, max_var=10.8, noise_level=0.0)
+# #    util.imshow(k*10)
 
 
     # PCA
