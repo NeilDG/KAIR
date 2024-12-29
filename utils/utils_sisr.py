@@ -799,17 +799,29 @@ def Gt_np(x, k, sf=3, center=False):
     return x
 
 
+def batch_hypersim_degrade():
+    input_list = glob.glob("X:/SuperRes Dataset/ml-hypersim/*/images/*/*.jpg")
+    output_dir = "X:/SuperRes Dataset/hypersim/"
+    print(len(input_list))
+
+    for i in range(18948, len(input_list)):
+        file_name = input_list[i].split("\\")[-1].split(".")[0]
+        single_degrade(input_list[i], output_dir, file_name_override=file_name + "_"+str(i))
+
 def batch_degrade():
-    input_list = glob.glob("X:/SuperRes Dataset/Flickr2K/Flickr2K_HR/*.png")
-    output_dir = "X:/SuperRes Dataset/Flickr2K/"
+    input_list = glob.glob("X:/SuperRes Dataset/div2k/bicubic_x4/*.png")
+    output_dir = "X:/SuperRes Dataset/hypersim/"
     print(len(input_list))
 
     for input_path in input_list:
         single_degrade(input_path, output_dir)
 
-def single_degrade(input_path, output_path):
+def single_degrade(input_path, output_path, splitter = ".", file_name_override=None):
     img = util.imread_uint(input_path, 3)
-    file_name = input_path.split("\\")[-1].split(".")[0]
+    if(file_name_override is None):
+        file_name = input_path.split("\\")[-1].split(splitter)[0]
+    else:
+        file_name = file_name_override
 
     img = util.uint2single(img)
     k = anisotropic_Gaussian(ksize=15, theta=np.pi, l1=6, l2=6)
@@ -819,6 +831,7 @@ def single_degrade(input_path, output_path):
     output_dir_s = output_path + "/srmd_x4/"
     output_dir_d = output_path + "/dpsr_x4/"
     output_dir_c = output_path + "/classic_x4/"
+    output_dir_high = output_path + "/high/"
 
     # if not os.path.exists(output_dir_b):
     #     os.makedirs(output_dir_b, exist_ok=True)
@@ -831,6 +844,9 @@ def single_degrade(input_path, output_path):
 
     if not os.path.exists(output_dir_c):
         os.makedirs(output_dir_c, exist_ok=True)
+
+    if not os.path.exists(output_dir_high):
+        os.makedirs(output_dir_high, exist_ok=True)
 
     for sf in [4]:
         # modcrop
@@ -856,11 +872,15 @@ def single_degrade(input_path, output_path):
         img_c = utils.utils_image.single2uint(img_c)
         utils.utils_image.imwrite(img_c, output_dir_c + file_name + ".png")
 
-        print("Saved:", output_dir_c, output_dir_d, output_dir_s)
+        img = utils.utils_image.single2uint(img)
+        utils.utils_image.imwrite(img, output_dir_high + file_name + ".png")
+
+        print("Saved:", output_dir_c, output_dir_d, output_dir_s, output_dir_high)
         # util.imshow(img_d)
 
 if __name__ == '__main__':
-    batch_degrade()
+    # batch_degrade()
+    batch_hypersim_degrade()
 #     img = util.imread_uint('test.bmp', 3)
 #
 #     img = util.uint2single(img)
